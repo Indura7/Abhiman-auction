@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abhiman Welfare — Auction Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --surface: #ffffff;
+    --surface2: #f0ede6;
+    --border: #e2ddd4;
+    --text: #1a1814;
+    --text2: #6b6760;
+    --text3: #9e9b96;
+    --accent: #3368cb;
+    --accent-light: #e8f5ee;
+    --accent-text: #2478b4;
+    --warn: #b45309;
+    --warn-light: #fef3c7;
+    --danger: #991b1b;
+    --danger-light: #fee2e2;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 16px; }
+
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+  .logo { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+  .logo span { color: var(--accent); }
+  .header-date { font-size: 14px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+  .layout { display: grid; grid-template-columns: 260px 1fr; gap: 0; min-height: calc(100vh - 57px); }
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 1.5rem 1rem; position: sticky; top: 57px; height: calc(100vh - 57px); overflow-y: auto; }
+  .main { padding: 1.5rem 2rem 4rem; }
+
+  .tabs { display: flex; flex-direction: column; gap: 4px; }
+  .tab { width: 100%; padding: 12px 16px; border: none; border-radius: var(--radius); background: transparent; cursor: pointer; font-size: 15px; font-family: 'DM Sans', sans-serif; font-weight: 500; color: var(--text2); transition: all 0.15s; text-align: left; }
+  .tab:hover { background: var(--surface2); }
+  .tab.active { background: var(--accent); color: #fff; }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.25rem; }
+  .card-title { font-size: 16px; font-weight: 600; margin-bottom: 1.25rem; color: var(--text); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-row-4 { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 12px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+  input[type=text], input[type=number] { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 15px; font-family: 'DM Sans', sans-serif; background: var(--surface2); color: var(--text); outline: none; transition: border 0.15s; }
+  input:focus { border-color: var(--accent); background: #fff; }
+
+  .btn { padding: 10px 20px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; font-size: 15px; font-family: 'DM Sans', sans-serif; font-weight: 500; color: var(--text); transition: all 0.15s; }
+  .btn:hover { background: var(--surface2); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: var(--accent-text); }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-danger { background: var(--danger-light); color: var(--danger); border-color: #fca5a5; }
+  .btn-success { background: var(--accent-light); color: var(--accent-text); border-color: #86efac; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th { text-align: left; font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.4px; padding: 0 10px 10px; border-bottom: 1px solid var(--border); }
+  td { padding: 12px 10px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr.sub-row td { background: var(--surface2); font-size: 13px; }
+
+  .badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; display: inline-block; font-weight: 500; }
+  .badge-pending { background: var(--warn-light); color: var(--warn); }
+  .badge-sold { background: var(--accent-light); color: var(--accent-text); }
+
+  .metric-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 1.25rem; }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+  .metric-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+  .metric-value { font-size: 20px; font-weight: 600; color: var(--text); font-family: 'DM Mono', monospace; }
+  .metric-value.profit { color: var(--accent); }
+
+  .empty { text-align: center; color: var(--text3); font-size: 15px; padding: 3rem 1rem; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+  .sell-input { width: 110px; padding: 7px 10px !important; font-size: 14px !important; }
+
+  .sidebar-section { margin-bottom: 1.75rem; }
+  .sidebar-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; padding: 0 6px; }
+  .sidebar-stat { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: var(--radius); margin-bottom: 2px; }
+  .sidebar-stat:hover { background: var(--surface2); }
+  .sidebar-stat-label { font-size: 14px; color: var(--text2); }
+  .sidebar-stat-val { font-size: 14px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--text); }
+  .sidebar-stat-val.profit { color: var(--accent); }
+  .sync-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--text3); flex-shrink: 0; display: inline-block; }
+  .sync-dot.ok { background: #22c55e; }
+  .sync-dot.err { background: #ef4444; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    .tabs { flex-direction: row; }
+    .metric-grid { grid-template-columns: repeat(3, 1fr); }
+    .form-row-4 { grid-template-columns: 1fr 1fr; }
+    .main { padding: 1.25rem 1rem 4rem; }
+  }
+  @media (max-width: 480px) {
+    .form-row, .form-row-4 { grid-template-columns: 1fr; }
+    .metric-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Abhiman <span>Welfare</span> — Auction</div>
+  <div class="header-date" id="hdate"></div>
+</header>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigation</div>
+      <div class="tabs">
+        <button class="tab active" onclick="showTab('items')">📦  Items</button>
+        <button class="tab" onclick="showTab('auction')">🔨  Auction</button>
+        <button class="tab" onclick="showTab('summary')">📊  Summary</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Quick stats</div>
+      <div class="sidebar-stat"><span class="sidebar-stat-label">Total items</span><span class="sidebar-stat-val" id="qs-total">0</span></div>
+      <div class="sidebar-stat"><span class="sidebar-stat-label">Sold</span><span class="sidebar-stat-val" id="qs-sold">0</span></div>
+      <div class="sidebar-stat"><span class="sidebar-stat-label">Pending</span><span class="sidebar-stat-val" id="qs-pending">0</span></div>
+      <div class="sidebar-stat"><span class="sidebar-stat-label">Profit</span><span class="sidebar-stat-val profit" id="qs-profit">Rs.0</span></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Google Sheets</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <span class="sync-dot" id="sync-dot"></span>
+        <span style="font-size:13px;color:var(--text2);" id="sync-msg">Ready</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn btn-success btn-sm" onclick="syncToSheet()">↑ Sync to Sheet</button>
+        <button class="btn btn-sm" onclick="loadFromSheet()">↓ Load from Sheet</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <div class="section active" id="tab-items">
+      <div class="card">
+        <div class="card-title">Add item</div>
+        <div class="form-row-4">
+          <div class="form-group"><label>Item name</label><input type="text" id="item-name" placeholder="e.g. Steam iron" /></div>
+          <div class="form-group"><label>Brand / model</label><input type="text" id="item-brand" placeholder="e.g. Philips GC1905" /></div>
+          <div class="form-group"><label>Cost (Rs.)</label><input type="number" id="item-cost" placeholder="2500" min="0" /></div>
+          <div class="form-group"><label>Quantity</label><input type="number" id="item-qty" value="1" min="1" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Notes (optional)</label><input type="text" id="item-notes" placeholder="e.g. Red colour, 1000W" /></div>
+          <div class="form-group" style="justify-content:flex-end;">
+            <button class="btn btn-primary" onclick="addItem()" style="margin-top:auto;">Add item</button>
+          </div>
+        </div>
+      </div>
+      <div id="items-list"></div>
+    </div>
+
+    <div class="section" id="tab-auction">
+      <div class="card">
+        <div class="card-title">Real </div>
+        <p style="font-size:14px;color:var(--text2);margin-bottom:1rem;">Same model එකේ units වෙන වෙනම prices දාන්න පුළුවන්.</p>
+        <div id="auction-list"></div>
+      </div>
+    </div>
+
+    <div class="section" id="tab-summary">
+      <div class="metric-grid" id="metrics"></div>
+      <div class="card">
+        <div class="card-title">Item breakdown</div>
+        <div id="summary-table"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwNIvVlT6cdyeoGOumCfrnMFUeY-EvLs2eVeq7w87pe0DT_CjB9OzhO2sw9JWAp9qk/exec';
+const SHEET_ID = '1PmHvb134v3oD11TmoEmVRaJ0Fpl4GtRxxvjXJZ8GZGU';
+
+let items = JSON.parse(localStorage.getItem('abhiman_items') || '[]');
+
+document.getElementById('hdate').textContent = new Date().toLocaleDateString('si-LK', {year:'numeric',month:'long',day:'numeric'});
+
+function setSyncStatus(msg, type) {
+  document.getElementById('sync-msg').textContent = msg;
+  document.getElementById('sync-dot').className = 'sync-dot' + (type ? ' ' + type : '');
+}
+
+function updateQuickStats() {
+  const sold = items.filter(it => it.soldPrice !== null);
+  const revenue = sold.reduce((s,it) => s + it.soldPrice, 0);
+  const cost = sold.reduce((s,it) => s + it.cost, 0);
+  const profit = revenue - cost;
+  document.getElementById('qs-total').textContent = items.length;
+  document.getElementById('qs-sold').textContent = sold.length;
+  document.getElementById('qs-pending').textContent = items.length - sold.length;
+  document.getElementById('qs-profit').textContent = (profit >= 0 ? '+' : '') + 'Rs.' + profit.toLocaleString();
+}
+
+async function syncToSheet() {
+  setSyncStatus('Syncing...', '');
+  try {
+    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'write', sheetId: SHEET_ID, items }) });
+    const d = await res.json();
+    setSyncStatus(d.ok ? 'Synced — ' + new Date().toLocaleTimeString() : 'Sync failed', d.ok ? 'ok' : 'err');
+  } catch(e) { setSyncStatus('Error: ' + e.message, 'err'); }
+}
+
+async function loadFromSheet() {
+  setSyncStatus('Loading...', '');
+  try {
+    const res = await fetch(SCRIPT_URL + '?sheetId=' + SHEET_ID);
+    const d = await res.json();
+    items = d.items.map(it => ({ ...it, cost: Number(it.cost), soldPrice: it.soldPrice === null ? null : Number(it.soldPrice) }));
+    localStorage.setItem('abhiman_items', JSON.stringify(items));
+    setSyncStatus('Loaded — ' + new Date().toLocaleTimeString(), 'ok');
+    updateQuickStats(); renderItems();
+  } catch(e) { setSyncStatus('Error: ' + e.message, 'err'); }
+}
+
+function save() {
+  localStorage.setItem('abhiman_items', JSON.stringify(items));
+  setSyncStatus('Unsaved — Sync click කරන්න', 'err');
+  updateQuickStats();
+}
+
+function showTab(t) {
+  document.querySelectorAll('.tab').forEach((el, i) => el.classList.toggle('active', ['items','auction','summary'][i] === t));
+  document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + t).classList.add('active');
+  if (t === 'auction') renderAuction();
+  if (t === 'summary') renderSummary();
+  if (t === 'items') renderItems();
+}
+
+function addItem() {
+  const name = document.getElementById('item-name').value.trim();
+  const brand = document.getElementById('item-brand').value.trim();
+  const cost = parseFloat(document.getElementById('item-cost').value);
+  const qty = parseInt(document.getElementById('item-qty').value) || 1;
+  const notes = document.getElementById('item-notes').value.trim();
+  if (!name || isNaN(cost)) { alert('Item name සහ cost price ඕනේ.'); return; }
+  for (let i = 0; i < qty; i++) items.push({ id: Date.now() + i, name, brand, notes, cost, soldPrice: null });
+  save(); renderItems();
+  ['item-name','item-brand','item-cost','item-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('item-qty').value = 1;
+}
+
+function deleteItem(id) { items = items.filter(it => it.id !== id); save(); renderItems(); }
+
+function groupByModel(arr) {
+  const g = {};
+  arr.forEach(it => { const k = it.name+'||'+it.brand; if (!g[k]) g[k]=[]; g[k].push(it); });
+  return g;
+}
+
+function renderItems() {
+  const el = document.getElementById('items-list');
+  if (!items.length) { el.innerHTML = '<div class="empty">Items නෑ. Add කරන්න.</div>'; return; }
+  const groups = groupByModel(items);
+  let html = '';
+  for (const key in groups) {
+    const g = groups[key];
+    html += `<div class="card"><div class="card-title">${g[0].name}${g[0].brand?' — '+g[0].brand:''} <span style="font-weight:400;color:var(--text2);font-size:14px;">(${g.length} unit${g.length>1?'s':''})</span></div>
+    <table><thead><tr><th>#</th><th>Cost</th><th>Notes</th><th>Status</th><th></th></tr></thead><tbody>`;
+    g.forEach((it,i) => {
+      html += `<tr><td style="color:var(--text3)">${i+1}</td><td>Rs.${it.cost.toLocaleString()}</td>
+      <td style="color:var(--text2)">${it.notes||'—'}</td>
+      <td>${it.soldPrice!==null?`<span class="badge badge-sold">Sold Rs.${it.soldPrice.toLocaleString()}</span>`:`<span class="badge badge-pending">Pending</span>`}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteItem(${it.id})">Remove</button></td></tr>`;
+    });
+    html += '</tbody></table></div>';
+  }
+  el.innerHTML = html;
+  updateQuickStats();
+}
+
+function renderAuction() {
+  const el = document.getElementById('auction-list');
+  const pending = items.filter(it => it.soldPrice===null);
+  const sold = items.filter(it => it.soldPrice!==null);
+  if (!items.length) { el.innerHTML = '<div class="empty">Items tab එකේ item add කරන්න.</div>'; return; }
+  let html = '';
+  if (pending.length) {
+    html += `<p style="font-size:14px;color:var(--text2);margin-bottom:12px;font-weight:500;">Pending (${pending.length})</p>`;
+    html += '<table><thead><tr><th>Item</th><th>Cost</th><th>Sold price (Rs.)</th><th></th></tr></thead><tbody>';
+    pending.forEach(it => {
+      const same = pending.filter(x => x.name===it.name&&x.brand===it.brand);
+      const num = same.length>1?` #${same.indexOf(it)+1}`:'';
+      html += `<tr><td>${it.name}${it.brand?' / '+it.brand:''}<span style="color:var(--text3)">${num}</span>${it.notes?`<br><span style="font-size:12px;color:var(--text3)">${it.notes}</span>`:''}</td>
+      <td>Rs.${it.cost.toLocaleString()}</td>
+      <td><input type="number" class="sell-input" id="sell-${it.id}" placeholder="4500" min="0"/></td>
+      <td><button class="btn btn-sm btn-success" onclick="markSold(${it.id})">Mark sold</button></td></tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  if (sold.length) {
+    html += `<hr class="divider"><p style="font-size:14px;color:var(--text2);margin-bottom:12px;font-weight:500;">Sold (${sold.length})</p>`;
+    html += '<table><thead><tr><th>Item</th><th>Cost</th><th>Sold for</th><th>Profit</th><th></th></tr></thead><tbody>';
+    sold.forEach(it => {
+      const profit = it.soldPrice-it.cost;
+      const pc = profit>=0?'var(--accent)':'var(--danger)';
+      html += `<tr><td>${it.name}${it.brand?' / '+it.brand:''}${it.notes?`<br><span style="font-size:12px;color:var(--text3)">${it.notes}</span>`:''}</td>
+      <td>Rs.${it.cost.toLocaleString()}</td><td>Rs.${it.soldPrice.toLocaleString()}</td>
+      <td style="color:${pc};font-weight:600">${profit>=0?'+':''}Rs.${profit.toLocaleString()}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="unmarkSold(${it.id})">Undo</button></td></tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  el.innerHTML = html;
+}
+
+function markSold(id) {
+  const val = parseFloat(document.getElementById('sell-'+id).value);
+  if (isNaN(val)||val<0) { alert('Sold price දාන්න.'); return; }
+  const it = items.find(x => x.id===id);
+  if (it) { it.soldPrice=val; save(); renderAuction(); }
+}
+
+function unmarkSold(id) {
+  const it = items.find(x => x.id===id);
+  if (it) { it.soldPrice=null; save(); renderAuction(); }
+}
+
+function renderSummary() {
+  const totalCost = items.reduce((s,it)=>s+it.cost,0);
+  const sold = items.filter(it=>it.soldPrice!==null);
+  const totalRevenue = sold.reduce((s,it)=>s+it.soldPrice,0);
+  const totalProfit = totalRevenue-sold.reduce((s,it)=>s+it.cost,0);
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Total items</div><div class="metric-value">${items.length}</div></div>
+    <div class="metric"><div class="metric-label">Sold</div><div class="metric-value">${sold.length}</div></div>
+    <div class="metric"><div class="metric-label">Pending</div><div class="metric-value">${items.length-sold.length}</div></div>
+    <div class="metric"><div class="metric-label">Total cost</div><div class="metric-value" style="font-size:17px;">Rs.${totalCost.toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-label">Revenue</div><div class="metric-value" style="font-size:17px;">Rs.${totalRevenue.toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-label">Profit</div><div class="metric-value profit" style="font-size:17px;">${totalProfit>=0?'+':''}Rs.${totalProfit.toLocaleString()}</div></div>`;
+  const groups = groupByModel(items);
+  if (!items.length) { document.getElementById('summary-table').innerHTML='<div class="empty">Data නෑ.</div>'; return; }
+  let html = '<table><thead><tr><th>Item</th><th>Units</th><th>Total cost</th><th>Revenue</th><th>Profit</th></tr></thead><tbody>';
+  for (const key in groups) {
+    const g = groups[key];
+    const gCost = g.reduce((s,it)=>s+it.cost,0);
+    const gSold = g.filter(it=>it.soldPrice!==null);
+    const gRev = gSold.reduce((s,it)=>s+it.soldPrice,0);
+    const gProfit = gRev-gSold.reduce((s,it)=>s+it.cost,0);
+    const pc = gProfit>=0?'var(--accent)':'var(--danger)';
+    html += `<tr><td><strong>${g[0].name}</strong>${g[0].brand?`<br><span style="font-size:12px;color:var(--text3)">${g[0].brand}</span>`:''}</td>
+    <td>${g.length}<span style="color:var(--text3);font-size:12px"> (${gSold.length} sold)</span></td>
+    <td>Rs.${gCost.toLocaleString()}</td><td>Rs.${gRev.toLocaleString()}</td>
+    <td style="color:${pc};font-weight:600">${gProfit>=0?'+':''}Rs.${gProfit.toLocaleString()}</td></tr>`;
+    if (g.length>1) {
+      g.forEach((it,i) => {
+        const p = it.soldPrice!==null?it.soldPrice-it.cost:null;
+        const ipc = p!==null?(p>=0?'var(--accent)':'var(--danger)'):'var(--text3)';
+        html += `<tr class="sub-row"><td style="padding-left:22px;color:var(--text2)">Unit ${i+1}${it.notes?' — '+it.notes:''}</td><td></td>
+        <td style="color:var(--text2)">Rs.${it.cost.toLocaleString()}</td>
+        <td style="color:var(--text2)">${it.soldPrice!==null?'Rs.'+it.soldPrice.toLocaleString():'—'}</td>
+        <td style="color:${ipc}">${p!==null?(p>=0?'+':'')+'Rs.'+p.toLocaleString():'—'}</td></tr>`;
+      });
+    }
+  }
+  html += '</tbody></table>';
+  document.getElementById('summary-table').innerHTML = html;
+}
+
+setSyncStatus('Ready', 'ok');
+renderItems();
+</script>
+</body>
+</html>

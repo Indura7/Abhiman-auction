@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abhiman Welfare — Auction Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --surface: #ffffff;
+    --surface2: #f0ede6;
+    --border: #e2ddd4;
+    --text: #1a1814;
+    --text2: #6b6760;
+    --text3: #9e9b96;
+    --accent: #2d6a4f;
+    --accent-light: #e8f5ee;
+    --accent-text: #1b4332;
+    --warn: #b45309;
+    --warn-light: #fef3c7;
+    --danger: #991b1b;
+    --danger-light: #fee2e2;
+    --info: #1e40af;
+    --info-light: #dbeafe;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+  .logo { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; }
+  .logo span { color: var(--accent); }
+  .header-date { font-size: 12px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+  .container { max-width: 700px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; }
+  .tab { flex: 1; padding: 8px; border: none; border-radius: 7px; background: transparent; cursor: pointer; font-size: 13px; font-family: 'DM Sans', sans-serif; font-weight: 500; color: var(--text2); transition: all 0.15s; }
+  .tab.active { background: var(--accent); color: #fff; }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+  .card-title { font-size: 14px; font-weight: 600; margin-bottom: 1rem; color: var(--text); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+  input[type=text], input[type=number] { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; font-family: 'DM Sans', sans-serif; background: var(--surface2); color: var(--text); outline: none; transition: border 0.15s; }
+  input:focus { border-color: var(--accent); background: #fff; }
+
+  .btn { padding: 9px 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; font-size: 13px; font-family: 'DM Sans', sans-serif; font-weight: 500; color: var(--text); transition: all 0.15s; }
+  .btn:hover { background: var(--surface2); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: var(--accent-text); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-danger { background: var(--danger-light); color: var(--danger); border-color: #fca5a5; }
+  .btn-success { background: var(--accent-light); color: var(--accent-text); border-color: #86efac; }
+
+  .sync-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 1rem; flex-wrap: wrap; }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+  .sync-dot.ok { background: #22c55e; }
+  .sync-dot.err { background: #ef4444; }
+  .sync-msg { font-size: 12px; color: var(--text2); flex: 1; min-width: 100px; }
+  .sync-btns { display: flex; gap: 6px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.4px; padding: 0 8px 8px; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 8px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr.sub-row td { background: var(--surface2); font-size: 12px; }
+
+  .badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; display: inline-block; font-weight: 500; }
+  .badge-pending { background: var(--warn-light); color: var(--warn); }
+  .badge-sold { background: var(--accent-light); color: var(--accent-text); }
+
+  .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1rem; }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
+  .metric-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+  .metric-value { font-size: 20px; font-weight: 600; color: var(--text); font-family: 'DM Mono', monospace; }
+  .metric-value.profit { color: var(--accent); }
+
+  .empty { text-align: center; color: var(--text3); font-size: 13px; padding: 2.5rem 1rem; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+  .sell-input { width: 100px; padding: 6px 10px !important; font-size: 13px !important; }
+
+  .setup-steps { display: flex; flex-direction: column; gap: 1rem; }
+  .step { display: flex; gap: 12px; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; margin-top: 2px; }
+  .step-body { flex: 1; font-size: 13px; line-height: 1.7; color: var(--text2); }
+  .step-body strong { color: var(--text); }
+  .step-body a { color: var(--accent); }
+  .code-block { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; margin-top: 8px; font-family: 'DM Mono', monospace; font-size: 11px; line-height: 1.8; color: var(--text); white-space: pre-wrap; word-break: break-all; }
+  .notice { background: var(--warn-light); color: var(--warn); border-radius: var(--radius); padding: 10px 14px; font-size: 13px; margin-bottom: 1.25rem; border: 1px solid #fde68a; }
+  .connected-notice { background: var(--accent-light); color: var(--accent-text); border-radius: var(--radius); padding: 10px 14px; font-size: 13px; margin-bottom: 1.25rem; border: 1px solid #86efac; }
+
+  @media (max-width: 480px) {
+    .form-row { grid-template-columns: 1fr; }
+    .metric-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Abhiman <span>Welfare</span> — Auction</div>
+  <div class="header-date" id="hdate"></div>
+</header>
+
+<div class="container">
+
+  <!-- SETUP -->
+  <div id="setup-screen">
+    <div class="card">
+      <div class="card-title">Google Sheets සම්බන්ධ කරන්න</div>
+      <div class="notice">පහත steps follow කරලා Google Apps Script deploy කරන්න.</div>
+      <div class="setup-steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body"><a href="https://script.google.com/home" target="_blank">script.google.com</a> යන්න → <strong>New project</strong> click කරන්න.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">පහත code එක paste කරලා <strong>Ctrl+S</strong> save කරන්න:
+            <div class="code-block">function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+  var ss = SpreadsheetApp.openById(data.sheetId);
+  var sh = ss.getSheetByName('Items') || ss.insertSheet('Items');
+  if (data.action === 'init' || data.action === 'write') {
+    sh.clearContents();
+    sh.appendRow(['ID','Name','Brand','Notes','Cost','SoldPrice']);
+    if (data.items) data.items.forEach(function(it){
+      sh.appendRow([it.id,it.name,it.brand,it.notes,it.cost,it.soldPrice===null?'':it.soldPrice]);
+    });
+  }
+  return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);
+}
+function doGet(e) {
+  var ss = SpreadsheetApp.openById(e.parameter.sheetId);
+  var sh = ss.getSheetByName('Items');
+  if (!sh) return ContentService.createTextOutput(JSON.stringify({items:[]})).setMimeType(ContentService.MimeType.JSON);
+  var rows = sh.getDataRange().getValues();
+  var items = [];
+  for (var i=1;i&lt;rows.length;i++){
+    items.push({id:rows[i][0],name:rows[i][1],brand:rows[i][2],notes:rows[i][3],cost:rows[i][4],soldPrice:rows[i][5]===''?null:rows[i][5]});
+  }
+  return ContentService.createTextOutput(JSON.stringify({items:items})).setMimeType(ContentService.MimeType.JSON);
+}</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body"><strong>Deploy</strong> (top right) → <strong>New deployment</strong> → Type: <strong>Web app</strong> → Execute as: <strong>Me</strong> → Access: <strong>Anyone</strong> → Deploy → URL copy කරන්න.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body"><a href="https://sheets.google.com" target="_blank">sheets.google.com</a> හි නව sheet හදන්න. URL එකේ <code>/d/</code> සහ <code>/edit</code> මැද ID copy කරන්න.</div>
+        </div>
+      </div>
+      <div style="margin-top:1.25rem;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Apps Script Web App URL</label>
+            <input type="text" id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec" />
+          </div>
+          <div class="form-group">
+            <label>Google Sheet ID</label>
+            <input type="text" id="cfg-sid" placeholder="1BxiMVs0XRA5..." />
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveConfig()">Connect Sheet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="main-app" style="display:none;">
+    <div class="sync-bar">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span class="sync-msg" id="sync-msg">Ready</span>
+      <div class="sync-btns">
+        <button class="btn btn-sm btn-success" onclick="syncToSheet()">↑ Sync</button>
+        <button class="btn btn-sm" onclick="loadFromSheet()">↓ Load</button>
+        <button class="btn btn-sm btn-danger" onclick="resetConfig()">Disconnect</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('items')">Items</button>
+      <button class="tab" onclick="showTab('auction')">Auction</button>
+      <button class="tab" onclick="showTab('summary')">Summary</button>
+    </div>
+
+    <!-- ITEMS -->
+    <div class="section active" id="tab-items">
+      <div class="card">
+        <div class="card-title">Item එකක් add කරන්න</div>
+        <div class="form-row">
+          <div class="form-group"><label>Item name</label><input type="text" id="item-name" placeholder="e.g. Steam iron" /></div>
+          <div class="form-group"><label>Brand / model</label><input type="text" id="item-brand" placeholder="e.g. Philips GC1905" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Cost price (Rs.)</label><input type="number" id="item-cost" placeholder="2500" min="0" /></div>
+          <div class="form-group"><label>Quantity</label><input type="number" id="item-qty" value="1" min="1" /></div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;"><label>Notes (optional)</label><input type="text" id="item-notes" placeholder="e.g. Red colour, 1000W" /></div>
+        <button class="btn btn-primary" onclick="addItem()">Add item</button>
+      </div>
+      <div id="items-list"></div>
+    </div>
+
+    <!-- AUCTION -->
+    <div class="section" id="tab-auction">
+      <div class="card">
+        <div class="card-title">Sold prices record කරන්න</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Same model එකේ units වෙන වෙනම prices දාන්න පුළුවන්.</p>
+        <div id="auction-list"></div>
+      </div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="section" id="tab-summary">
+      <div class="metric-grid" id="metrics"></div>
+      <div class="card">
+        <div class="card-title">Item breakdown</div>
+        <div id="summary-table"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let items = JSON.parse(localStorage.getItem('abhiman_items') || '[]');
+let cfg = JSON.parse(localStorage.getItem('abhiman_cfg') || 'null');
+
+document.getElementById('hdate').textContent = new Date().toLocaleDateString('si-LK', {year:'numeric',month:'long',day:'numeric'});
+
+function init() {
+  if (cfg && cfg.url && cfg.sid) {
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+    renderItems();
+    setSyncStatus('Ready', '');
+  }
+}
+
+function saveConfig() {
+  const url = document.getElementById('cfg-url').value.trim();
+  const sid = document.getElementById('cfg-sid').value.trim();
+  if (!url || !sid) { alert('URL සහ Sheet ID දෙකම ඕනේ.'); return; }
+  cfg = { url, sid };
+  localStorage.setItem('abhiman_cfg', JSON.stringify(cfg));
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  setSyncStatus('Sheet connected!', 'ok');
+  renderItems();
+}
+
+function resetConfig() {
+  if (!confirm('Disconnect කරන්නද?')) return;
+  cfg = null;
+  localStorage.removeItem('abhiman_cfg');
+  document.getElementById('setup-screen').style.display = 'block';
+  document.getElementById('main-app').style.display = 'none';
+}
+
+function setSyncStatus(msg, type) {
+  document.getElementById('sync-msg').textContent = msg;
+  const dot = document.getElementById('sync-dot');
+  dot.className = 'sync-dot' + (type ? ' ' + type : '');
+}
+
+async function syncToSheet() {
+  setSyncStatus('Syncing...', '');
+  try {
+    const res = await fetch(cfg.url, { method: 'POST', body: JSON.stringify({ action: 'write', sheetId: cfg.sid, items }) });
+    const d = await res.json();
+    setSyncStatus(d.ok ? 'Synced — ' + new Date().toLocaleTimeString() : 'Sync failed', d.ok ? 'ok' : 'err');
+  } catch(e) { setSyncStatus('Error: ' + e.message, 'err'); }
+}
+
+async function loadFromSheet() {
+  setSyncStatus('Loading...', '');
+  try {
+    const res = await fetch(cfg.url + '?sheetId=' + cfg.sid);
+    const d = await res.json();
+    items = d.items.map(it => ({ ...it, cost: Number(it.cost), soldPrice: it.soldPrice === null ? null : Number(it.soldPrice) }));
+    localStorage.setItem('abhiman_items', JSON.stringify(items));
+    setSyncStatus('Loaded — ' + new Date().toLocaleTimeString(), 'ok');
+    renderItems();
+  } catch(e) { setSyncStatus('Error: ' + e.message, 'err'); }
+}
+
+function save() { localStorage.setItem('abhiman_items', JSON.stringify(items)); setSyncStatus('Unsaved — Sync click කරන්න', 'err'); }
+
+function showTab(t) {
+  document.querySelectorAll('.tab').forEach((el, i) => el.classList.toggle('active', ['items','auction','summary'][i] === t));
+  document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + t).classList.add('active');
+  if (t === 'auction') renderAuction();
+  if (t === 'summary') renderSummary();
+  if (t === 'items') renderItems();
+}
+
+function addItem() {
+  const name = document.getElementById('item-name').value.trim();
+  const brand = document.getElementById('item-brand').value.trim();
+  const cost = parseFloat(document.getElementById('item-cost').value);
+  const qty = parseInt(document.getElementById('item-qty').value) || 1;
+  const notes = document.getElementById('item-notes').value.trim();
+  if (!name || isNaN(cost)) { alert('Item name සහ cost price ඕනේ.'); return; }
+  for (let i = 0; i < qty; i++) items.push({ id: Date.now() + i, name, brand, notes, cost, soldPrice: null });
+  save(); renderItems();
+  ['item-name','item-brand','item-cost','item-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('item-qty').value = 1;
+}
+
+function deleteItem(id) { items = items.filter(it => it.id !== id); save(); renderItems(); }
+
+function groupByModel(arr) {
+  const g = {};
+  arr.forEach(it => { const k = it.name + '||' + it.brand; if (!g[k]) g[k] = []; g[k].push(it); });
+  return g;
+}
+
+function renderItems() {
+  const el = document.getElementById('items-list');
+  if (!items.length) { el.innerHTML = '<div class="empty">Items නෑ. Add කරන්න.</div>'; return; }
+  const groups = groupByModel(items);
+  let html = '';
+  for (const key in groups) {
+    const g = groups[key];
+    html += `<div class="card"><div class="card-title">${g[0].name}${g[0].brand ? ' — ' + g[0].brand : ''} <span style="font-weight:400;color:var(--text2);font-size:13px;">(${g.length} unit${g.length > 1 ? 's' : ''})</span></div>
+    <table><thead><tr><th>#</th><th>Cost</th><th>Notes</th><th>Status</th><th></th></tr></thead><tbody>`;
+    g.forEach((it, i) => {
+      html += `<tr><td style="color:var(--text3)">${i + 1}</td><td>Rs.${it.cost.toLocaleString()}</td>
+      <td style="color:var(--text2)">${it.notes || '—'}</td>
+      <td>${it.soldPrice !== null ? `<span class="badge badge-sold">Sold Rs.${it.soldPrice.toLocaleString()}</span>` : `<span class="badge badge-pending">Pending</span>`}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteItem(${it.id})">Remove</button></td></tr>`;
+    });
+    html += '</tbody></table></div>';
+  }
+  el.innerHTML = html;
+}
+
+function renderAuction() {
+  const el = document.getElementById('auction-list');
+  const pending = items.filter(it => it.soldPrice === null);
+  const sold = items.filter(it => it.soldPrice !== null);
+  if (!items.length) { el.innerHTML = '<div class="empty">Items tab එකේ item add කරන්න.</div>'; return; }
+  let html = '';
+  if (pending.length) {
+    html += `<p style="font-size:12px;color:var(--text2);margin-bottom:10px;font-weight:500;">Pending (${pending.length})</p>`;
+    html += '<table><thead><tr><th>Item</th><th>Cost</th><th>Sold price</th><th></th></tr></thead><tbody>';
+    pending.forEach(it => {
+      const same = pending.filter(x => x.name === it.name && x.brand === it.brand);
+      const num = same.length > 1 ? ` #${same.indexOf(it) + 1}` : '';
+      html += `<tr><td>${it.name}${it.brand ? ' / ' + it.brand : ''}<span style="color:var(--text3)">${num}</span>${it.notes ? `<br><span style="font-size:11px;color:var(--text3)">${it.notes}</span>` : ''}</td>
+      <td>Rs.${it.cost.toLocaleString()}</td>
+      <td><input type="number" class="sell-input" id="sell-${it.id}" placeholder="4500" min="0"/></td>
+      <td><button class="btn btn-sm btn-success" onclick="markSold(${it.id})">Sold</button></td></tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  if (sold.length) {
+    html += `<hr class="divider"><p style="font-size:12px;color:var(--text2);margin-bottom:10px;font-weight:500;">Sold (${sold.length})</p>`;
+    html += '<table><thead><tr><th>Item</th><th>Cost</th><th>Sold for</th><th>Profit</th><th></th></tr></thead><tbody>';
+    sold.forEach(it => {
+      const profit = it.soldPrice - it.cost;
+      const pc = profit >= 0 ? 'var(--accent)' : 'var(--danger)';
+      html += `<tr><td>${it.name}${it.brand ? ' / ' + it.brand : ''}${it.notes ? `<br><span style="font-size:11px;color:var(--text3)">${it.notes}</span>` : ''}</td>
+      <td>Rs.${it.cost.toLocaleString()}</td><td>Rs.${it.soldPrice.toLocaleString()}</td>
+      <td style="color:${pc};font-weight:600">${profit >= 0 ? '+' : ''}Rs.${profit.toLocaleString()}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="unmarkSold(${it.id})">Undo</button></td></tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  el.innerHTML = html;
+}
+
+function markSold(id) {
+  const val = parseFloat(document.getElementById('sell-' + id).value);
+  if (isNaN(val) || val < 0) { alert('Sold price දාන්න.'); return; }
+  const it = items.find(x => x.id === id);
+  if (it) { it.soldPrice = val; save(); renderAuction(); }
+}
+
+function unmarkSold(id) {
+  const it = items.find(x => x.id === id);
+  if (it) { it.soldPrice = null; save(); renderAuction(); }
+}
+
+function renderSummary() {
+  const totalCost = items.reduce((s, it) => s + it.cost, 0);
+  const sold = items.filter(it => it.soldPrice !== null);
+  const totalRevenue = sold.reduce((s, it) => s + it.soldPrice, 0);
+  const totalProfit = totalRevenue - sold.reduce((s, it) => s + it.cost, 0);
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Total items</div><div class="metric-value">${items.length}</div></div>
+    <div class="metric"><div class="metric-label">Sold</div><div class="metric-value">${sold.length}</div></div>
+    <div class="metric"><div class="metric-label">Pending</div><div class="metric-value">${items.length - sold.length}</div></div>
+    <div class="metric"><div class="metric-label">Total cost</div><div class="metric-value" style="font-size:15px;">Rs.${totalCost.toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-label">Revenue</div><div class="metric-value" style="font-size:15px;">Rs.${totalRevenue.toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-label">Profit</div><div class="metric-value profit" style="font-size:15px;">${totalProfit >= 0 ? '+' : ''}Rs.${totalProfit.toLocaleString()}</div></div>`;
+  const groups = groupByModel(items);
+  if (!items.length) { document.getElementById('summary-table').innerHTML = '<div class="empty">Data නෑ.</div>'; return; }
+  let html = '<table><thead><tr><th>Item</th><th>Units</th><th>Cost</th><th>Revenue</th><th>Profit</th></tr></thead><tbody>';
+  for (const key in groups) {
+    const g = groups[key];
+    const gCost = g.reduce((s, it) => s + it.cost, 0);
+    const gSold = g.filter(it => it.soldPrice !== null);
+    const gRev = gSold.reduce((s, it) => s + it.soldPrice, 0);
+    const gProfit = gRev - gSold.reduce((s, it) => s + it.cost, 0);
+    const pc = gProfit >= 0 ? 'var(--accent)' : 'var(--danger)';
+    html += `<tr><td><strong>${g[0].name}</strong>${g[0].brand ? `<br><span style="font-size:11px;color:var(--text3)">${g[0].brand}</span>` : ''}</td>
+    <td>${g.length}<span style="color:var(--text3);font-size:11px"> (${gSold.length} sold)</span></td>
+    <td>Rs.${gCost.toLocaleString()}</td><td>Rs.${gRev.toLocaleString()}</td>
+    <td style="color:${pc};font-weight:600">${gProfit >= 0 ? '+' : ''}Rs.${gProfit.toLocaleString()}</td></tr>`;
+    if (g.length > 1) {
+      g.forEach((it, i) => {
+        const p = it.soldPrice !== null ? it.soldPrice - it.cost : null;
+        const ipc = p !== null ? (p >= 0 ? 'var(--accent)' : 'var(--danger)') : 'var(--text3)';
+        html += `<tr class="sub-row"><td style="padding-left:20px;color:var(--text2)">Unit ${i + 1}${it.notes ? ' — ' + it.notes : ''}</td><td></td>
+        <td style="color:var(--text2)">Rs.${it.cost.toLocaleString()}</td>
+        <td style="color:var(--text2)">${it.soldPrice !== null ? 'Rs.' + it.soldPrice.toLocaleString() : '—'}</td>
+        <td style="color:${ipc}">${p !== null ? (p >= 0 ? '+' : '') + 'Rs.' + p.toLocaleString() : '—'}</td></tr>`;
+      });
+    }
+  }
+  html += '</tbody></table>';
+  document.getElementById('summary-table').innerHTML = html;
+}
+
+init();
+</script>
+</body>
+</html>
