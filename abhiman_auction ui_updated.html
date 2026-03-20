@@ -45,7 +45,7 @@
   .section.active { display: block; }
 
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.25rem; }
-  .card-title { font-size: 16px; font-weight: 600; margin-bottom: 1.25rem; color: var(--text); }
+  .card-title { font-size: 25px; font-weight: 600; margin-bottom: 1.25rem; color: var(--text); }
 
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
   .form-row-4 { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
@@ -110,7 +110,7 @@
 <body>
 
 <header>
-  <div class="logo">Abhiman <span>Welfare</span> — Auction</div>
+  <div class="logo">Abhiman <span>Welfare Society</span> — Auction</div>
   <div class="header-date" id="hdate"></div>
 </header>
 
@@ -119,7 +119,7 @@
     <div class="sidebar-section">
       <div class="sidebar-label">Navigation</div>
       <div class="tabs">
-        <button class="tab active" onclick="showTab('items')">📦  Items</button>
+        <button class="tab active" onclick="showTab('items')">📦  Items Stock</button>
         <button class="tab" onclick="showTab('auction')">🔨  Auction</button>
         <button class="tab" onclick="showTab('summary')">📊  Summary</button>
       </div>
@@ -169,8 +169,8 @@
 
     <div class="section" id="tab-auction">
       <div class="card">
-        <div class="card-title">Real </div>
-        <p style="font-size:14px;color:var(--text2);margin-bottom:1rem;">Same model එකේ units වෙන වෙනම prices දාන්න පුළුවන්.</p>
+        <div class="card-title">Real time Auction update </div>
+        <p style="font-size:14px;color:var(--text2);margin-bottom:1rem;">Same model units can be added separately </p>
         <div id="auction-list"></div>
       </div>
     </div>
@@ -252,7 +252,7 @@ function addItem() {
   const cost = parseFloat(document.getElementById('item-cost').value);
   const qty = parseInt(document.getElementById('item-qty').value) || 1;
   const notes = document.getElementById('item-notes').value.trim();
-  if (!name || isNaN(cost)) { alert('Item name සහ cost price ඕනේ.'); return; }
+  if (!name || isNaN(cost)) { alert('Item name and cost price are must.\n Add at least name and price '); return; }
   for (let i = 0; i < qty; i++) items.push({ id: Date.now() + i, name, brand, notes, cost, soldPrice: null });
   save(); renderItems();
   ['item-name','item-brand','item-cost','item-notes'].forEach(id => document.getElementById(id).value = '');
@@ -269,7 +269,7 @@ function groupByModel(arr) {
 
 function renderItems() {
   const el = document.getElementById('items-list');
-  if (!items.length) { el.innerHTML = '<div class="empty">Items නෑ. Add කරන්න.</div>'; return; }
+  if (!items.length) { el.innerHTML = '<div class="empty">There is no items. Please add some..</div>'; return; }
   const groups = groupByModel(items);
   let html = '';
   for (const key in groups) {
@@ -292,7 +292,7 @@ function renderAuction() {
   const el = document.getElementById('auction-list');
   const pending = items.filter(it => it.soldPrice===null);
   const sold = items.filter(it => it.soldPrice!==null);
-  if (!items.length) { el.innerHTML = '<div class="empty">Items tab එකේ item add කරන්න.</div>'; return; }
+  if (!items.length) { el.innerHTML = '<div class="empty">Please add some items on Item Stock menu</div>'; return; }
   let html = '';
   if (pending.length) {
     html += `<p style="font-size:14px;color:var(--text2);margin-bottom:12px;font-weight:500;">Pending (${pending.length})</p>`;
@@ -325,7 +325,7 @@ function renderAuction() {
 
 function markSold(id) {
   const val = parseFloat(document.getElementById('sell-'+id).value);
-  if (isNaN(val)||val<0) { alert('Sold price දාන්න.'); return; }
+  if (isNaN(val)||val<0) { alert('Please add Sold price.'); return; }
   const it = items.find(x => x.id===id);
   if (it) { it.soldPrice=val; save(); renderAuction(); }
 }
@@ -348,7 +348,7 @@ function renderSummary() {
     <div class="metric"><div class="metric-label">Revenue</div><div class="metric-value" style="font-size:17px;">Rs.${totalRevenue.toLocaleString()}</div></div>
     <div class="metric"><div class="metric-label">Profit</div><div class="metric-value profit" style="font-size:17px;">${totalProfit>=0?'+':''}Rs.${totalProfit.toLocaleString()}</div></div>`;
   const groups = groupByModel(items);
-  if (!items.length) { document.getElementById('summary-table').innerHTML='<div class="empty">Data නෑ.</div>'; return; }
+  if (!items.length) { document.getElementById('summary-table').innerHTML='<div class="empty">Data empty.</div>'; return; }
   let html = '<table><thead><tr><th>Item</th><th>Units</th><th>Total cost</th><th>Revenue</th><th>Profit</th></tr></thead><tbody>';
   for (const key in groups) {
     const g = groups[key];
