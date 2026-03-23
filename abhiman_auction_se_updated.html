@@ -155,7 +155,7 @@
     <div class="section" id="tab-auction">
       <!-- LOT CREATOR -->
       <div class="lot-panel" id="lot-panel" style="display:none;">
-        <div class="lot-panel-title">🎁 Create Lot — Items select කරන්න</div>
+        <div class="lot-panel-title">Create pack — Select items</div>
         <div id="lot-select-list"></div>
         <div style="margin-top:1rem;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
           <input type="text" id="lot-name" placeholder="Lot name (e.g. Kitchen Bundle)" style="flex:1;min-width:180px;" />
@@ -167,11 +167,11 @@
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:10px;">
           <div class="card-title" style="margin-bottom:0;">Real time Auction update</div>
-          <button class="btn btn-lot btn-sm" onclick="toggleLotPanel()">🎁 Create Lot</button>
+          <button class="btn btn-lot btn-sm" onclick="toggleLotPanel()">Create a pack</button>
         </div>
         <p style="font-size:14px;color:var(--text2);margin-bottom:1rem;">Same model units can be added separately. Use "Create Lot" to bundle items together.</p>
         <div style="margin-bottom:1rem;">
-          <input type="text" id="auction-search" placeholder="🔍  Item name search කරන්න..." oninput="renderAuction()" style="width:100%;font-size:15px;" />
+          <input type="text" id="auction-search" placeholder="Search by item name." oninput="renderAuction()" style="width:100%;font-size:15px;" />
         </div>
         <div id="auction-list"></div>
       </div>
@@ -248,7 +248,7 @@ async function loadFromSheet() {
 function save() {
   localStorage.setItem('abhiman_items', JSON.stringify(items));
   localStorage.setItem('abhiman_lots', JSON.stringify(lots));
-  setSyncStatus('Unsaved — Sync click කරන්න', 'err');
+  setSyncStatus('Unsaved — click sync', 'err');
   updateQuickStats();
 }
 
@@ -276,7 +276,7 @@ function addItem() {
 
 function deleteItem(id) {
   const it = items.find(x => x.id === id);
-  if (it && it.lotId) { alert('මේ item lot එකක තියෙනවා. Lot delete කරන්න.'); return; }
+  if (it && it.lotId) { alert('This item has been added to a lot.\n So please delete that lot..'); return; }
   items = items.filter(it => it.id !== id);
   save(); renderItems();
 }
@@ -331,7 +331,7 @@ function cancelLot() {
 function renderLotSelectList() {
   const pending = items.filter(it => it.soldPrice === null && !it.lotId);
   const el = document.getElementById('lot-select-list');
-  if (!pending.length) { el.innerHTML = '<p style="font-size:13px;color:var(--text2);">Pending items නෑ.</p>'; return; }
+  if (!pending.length) { el.innerHTML = '<p style="font-size:13px;color:var(--text2);">No any Pending items.</p>'; return; }
   let html = '';
   pending.forEach(it => {
     const same = pending.filter(x => x.name===it.name&&x.brand===it.brand);
@@ -358,7 +358,7 @@ function getCheckedItemIds() {
 
 function createLot() {
   const selectedIds = getCheckedItemIds();
-  if (selectedIds.length < 2) { alert('Items 2ක් වත් select කරන්න.'); return; }
+  if (selectedIds.length < 2) { alert('Select at least 2 items to create a bundle'); return; }
   const name = document.getElementById('lot-name').value.trim() || ('Lot ' + (lots.length + 1));
   const lotId = Date.now();
   const lotCost = selectedIds.reduce((s,id) => s + (items.find(it=>it.id===id)?.cost||0), 0);
@@ -370,7 +370,7 @@ function createLot() {
 }
 
 function deleteLot(lotId) {
-  if (!confirm('Lot delete කරන්නද? Items individual items ලෙස නැවත add වේ.')) return;
+  if (!confirm('Are you sure? Items return as separeted items.')) return;
   items.forEach(it => { if(it.lotId === lotId) { it.lotId = null; it.soldPrice = null; } });
   lots = lots.filter(l => l.id !== lotId);
   save(); renderAuction();
@@ -378,7 +378,7 @@ function deleteLot(lotId) {
 
 function markLotSold(lotId) {
   const val = parseFloat(document.getElementById('lot-sell-'+lotId).value);
-  if (isNaN(val)||val<0) { alert('Sold price දාන්න.'); return; }
+  if (isNaN(val)||val<0) { alert('Sold price is must..'); return; }
   const lot = lots.find(l=>l.id===lotId);
   if (lot) { lot.soldPrice=val; save(); renderAuction(); }
 }
